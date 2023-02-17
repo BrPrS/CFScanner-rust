@@ -1,0 +1,54 @@
+{
+  "inbounds": [
+    {
+      "port": 12345,
+      "listen": "127.0.0.1",
+      "tag": "socks-inbound",
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": false,
+        "ip": "127.0.0.1"
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "scherehtzhel01.schere.net",
+            "port": 443,
+            "users": [
+              {
+                "id": "fd4ee2ae-cac8-5df8-8ee8-4b5650523b90"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "wsSettings": {
+          "headers": {
+            "host": "scherehtzhel01.schere.net"
+          },
+          "path": "/api20"
+        },
+        "tlsSettings": {
+          "serverName": "c93cd154-a530-11ed-b40c-231ae5602b87.schere.net",
+          "allowInsecure": false
+        }
+      }
+    }
+  ]
+}
