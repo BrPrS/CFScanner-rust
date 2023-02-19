@@ -1,5 +1,6 @@
 use colour::{blue, blue_ln, cyan_ln, green, green_ln, red, red_ln, yellow, yellow_ln};
 use serde_json::Value;
+mod vmess_config_model;
 mod fs_and_config_fns;
 mod request_fns;
 use crate::fs_and_config_fns::{read_temp_config, run_v2ray, write_config_with_ip, find_configs};
@@ -9,11 +10,28 @@ use crate::request_fns::check_connection_through_v2ray;
 use std::process::{Command, exit};
 use std::{thread, env};
 use std::thread::JoinHandle;
-use std::fs::{self,OpenOptions};
+/*
+1-organize files
+2-choose configs
+----
+find all ips
+----
+3-run v2ray with selected config *
+4-make request to server using v2ray
+5-save result into file
+6-make it run on multiple thread
+7-handle errors/ show progress bar
+-------
+1- local list for nonmap command
 
-static CURL_INSTALLED: Lazy<bool> = Lazy::new(|| true);
 
-static CLOUD_FLARE_OK_LIST:Lazy<Vec<u8>>=Lazy::new(||vec![31, 45, 66, 80, 89, 103, 104, 108, 141, 147, 154, 159, 168, 170, 185, 188, 191, 192, 193,
+-------------
+8-use debug print
+
+*/
+// static CURL_INSTALLED: Lazy<bool> = Lazy::new(|| false);
+
+static CLOUD_FLARE_OK_LIST:Lazy<Vec<u8>>=Lazy::new(||vec![31, 45, 66, 80, 89, 103, 104, 108, 141, 147, 154, 159, 168, 170,173,185, 188, 191, 192, 193,
 194, 195, 199, 203, 205, 212]);
 static mut IPS:Lazy<Vec<String>> = Lazy::new(||get_ips());
 static SUBNETS: Lazy<Vec<String>> =  Lazy::new(||ip_fns::find_clf_ip_list());
@@ -29,7 +47,8 @@ fn each_thread_job(ip: &String, config_file: Value,is_curl_installed:bool)->Join
         let config_file = config_file.lock().unwrap();
         if is_curl_installed{
         let (check_ip_reuslt, check_ip_handler) = check_ip(&ip);
-        if check_ip_reuslt {
+        //Note: in windows the response of check_ip command is not returning 200
+        if check_ip_reuslt || cfg!(target_os="windows"){
             write_config_with_ip(config_file.clone(), &ip);
             let mut handler = run_v2ray(format!("config.json.{}", ip.trim()).as_str());
             let check_connection_handler = check_connection_through_v2ray(is_curl_installed,&ip);
@@ -87,7 +106,24 @@ fn kill_curls(){
     .expect("failed to stop v2rays");
     }
 }
-
+use std::fs::{self,OpenOptions};
+// fn wtite_ip_subnets(subnet:&String,ips:&Vec<String>){
+//     let path = env::current_dir().unwrap();
+//     let path = format!("{:?}/ip_subnets/{}",path,subnet);
+//     let file = OpenOptions::new().create(true).read(true).append(true).open(path).unwrap();
+// }
+//keeps number of thread always equal to given number
+// fn thread_manager(handles:& mut Vec<JoinHandle<()>>,number_of_threads:&usize,ip: &String, config_file: Value){
+//     if handles.len()<*number_of_threads{
+//         let thread_handle = each_thread_job(ip, config_file);
+//         handles.push(thread_handle);
+//     }
+//     for handle in handles{
+//         if handle.join().is_ok(){
+//             thread_manager(handles, number_of_threads, ip, config_file)
+//         }
+//     }
+// }
 
 fn write_ip_subnets(subnet:&String,ips: &  Vec<String>){
     let path = env::current_dir().unwrap();
@@ -123,7 +159,7 @@ fn get_ips()->Vec<String>{
         //check subnet is in ok list 
         if CLOUD_FLARE_OK_LIST.iter().any(|&i|i==firs_octet ){
         let mut ips_in_sub=ip_fns::ips_in_subnet(String::from(subnet.clone()));
-        // write_ip_subnets(&subnet, &  ips_in_sub);
+        write_ip_subnets(&subnet, &  ips_in_sub);
         ips.append(&mut ips_in_sub);
         }
     }
@@ -143,7 +179,6 @@ fn read_ips_locally()->Vec<String>{
     }
     ips
 }
-
 fn main() {
 
     read_ips_locally();
@@ -195,7 +230,7 @@ fn main() {
     let  ips:Vec<String>;
     
     let mut stdin_buf = String::new();
-    let curl_installed = *CURL_INSTALLED;
+    let  curl_installed:bool;
     match env::consts::OS{
         "linux"=>{
             yellow!("Is nmap installed?");
@@ -215,7 +250,14 @@ fn main() {
             exit(1)        
                     }
     }
-    
+    let mut curl_installed_input = String::new();
+    stdin().read_line(&mut curl_installed_input).unwrap();
+    match curl_installed_input.trim().to_lowercase().as_str(){
+        ""|"n"=>curl_installed=false,
+        "y"=>curl_installed=true,
+        _=>{red_ln!("invalid input");
+            exit(1)}
+    }
     let bar: ProgressBar = ProgressBar::new(ips.len() as u64);
     let mut handles: Vec<JoinHandle<()>> = vec![];
     bar.inc(0);

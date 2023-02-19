@@ -1,3 +1,4 @@
+use colour::blue_ln;
 use datetime::{DatePiece, LocalDateTime, TimePiece};
 use once_cell::sync::Lazy;
 use serde_json::Value;
@@ -84,6 +85,7 @@ pub fn run_v2ray(config_name: &str) -> Child {
     // println!("{}",config_name);
     let path = env::current_dir().unwrap();
     let path = String::from(path.into_os_string().to_str().unwrap());
+    // let path= path.strip_suffix("/src-tauri").unwrap();
     let v2ray_path:String;
     let servers_path:String;
     if cfg!(target_os = "windows"){
@@ -94,6 +96,7 @@ pub fn run_v2ray(config_name: &str) -> Child {
         v2ray_path = format!("{}/v2ray/v2ray", path);
         servers_path = format!("{}/configs/", path);
     }
+    // let check=format!("-c {}{}.json",servers_path,config);
     // println!("{check}");
     let configs_name = format!("{}{}", servers_path, config_name);
     // Debug
@@ -134,7 +137,7 @@ pub fn write_config_with_ip(template_config_file: Value, ip: &String) {
 
     let port = create_port_from_ip(&ip);
     //Replacing values in order of ip and template config
-    
+
     config_file["inbounds"][0]["port"] = format!("3{}", port).parse().unwrap();
     let _vmess_key_name = Value::String("vmess".to_string());
     let _trojan = Value::String("trojan".to_string());

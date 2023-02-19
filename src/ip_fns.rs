@@ -1,3 +1,4 @@
+use colour::red_ln;
 use std::{process::Command};
 pub fn find_clf_ip_list()->Vec<String>{
     //curl -s -XGET https://www.cloudflare.com/ips-v4
@@ -31,8 +32,8 @@ if cfg!(target_os = "windows") {
 }
 
 pub fn ips_in_subnet(subnet:String)->Vec<String>{
-    //nmap -sL -n "$subNet" | awk '/Nmap scan report/{print $NF}'
-    //,"|","awk","/Nmap scan report/{print $NF}"
+    // nmap -sL -n "$subNet" | awk '/Nmap scan report/{print $NF}'
+    // ,"|","awk","/Nmap scan report/{print $NF}"
 
     let output=Command::new("nmap")
     .args(["-sL","-n",&subnet])
@@ -56,7 +57,6 @@ pub fn ips_in_subnet(subnet:String)->Vec<String>{
 use std::sync::mpsc;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
-use std::os;
 pub fn check_ip(ip: &String) -> (bool,JoinHandle<()>) {
     //curl -s -w "%{http_code}\n" --tlsv1.2 -servername fronting.sudoer.net -H "Host: fronting.sudoer.net" --resolve fronting.sudoer.net:443:203.29.52.233 https://fronting.sudoer.net | grep '200'
     //200
@@ -89,6 +89,7 @@ pub fn check_ip(ip: &String) -> (bool,JoinHandle<()>) {
     let two_sec = Duration::from_secs(2);
 
     let output = rx.recv_timeout(two_sec);
+    // thread::sleep(two_sec);
     let result_status = match output {
         Ok(result) => {
             let result = String::from_utf8(result.stdout).unwrap();
