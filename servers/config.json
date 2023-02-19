@@ -25,11 +25,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "scherehtzhel01.schere.net",
+            "address": "scherehtznur01.shcere.com",
             "port": 443,
             "users": [
               {
-                "id": "fd4ee2ae-cac8-5df8-8ee8-4b5650523b90"
+                "id": "da283bf3-4bfe-583e-b0dc-e593b86851d3"
               }
             ]
           }
@@ -42,10 +42,10 @@
           "headers": {
             "host": "scherehtzhel01.schere.net"
           },
-          "path": "/api20"
+          "path": "/api10"
         },
         "tlsSettings": {
-          "serverName": "c93cd154-a530-11ed-b40c-231ae5602b87.schere.net",
+          "serverName": "d79fa76e-af9c-11ed-a22d-73c059e677d5.shcere.com",
           "allowInsecure": false
         }
       }

@@ -109,6 +109,7 @@ pub fn run_v2ray(config_name: &str) -> Child {
     let handle_v2ray_thread: Child;
     if cfg!(target_os = "windows") {
         handle_v2ray_thread = Command::new(format!("{}.exe",v2ray_path))
+            .arg("run")
             .arg("-c")
             .arg(&configs_name)
             .stdout(Stdio::null())
@@ -137,8 +138,12 @@ pub fn write_config_with_ip(template_config_file: Value, ip: &String) {
 
     let port = create_port_from_ip(&ip);
     //Replacing values in order of ip and template config
-
     config_file["inbounds"][0]["port"] = format!("3{}", port).parse().unwrap();
+    if config_file["inbounds"].as_array().unwrap().len()==2{
+        config_file["inbounds"][1]["port"] = format!("3{}", port+1).parse().unwrap();
+
+    }
+
     let _vmess_key_name = Value::String("vmess".to_string());
     let _trojan = Value::String("trojan".to_string());
     let protocol = config_file["outbounds"][0]["protocol"].clone().to_string();
@@ -156,7 +161,7 @@ pub fn write_config_with_ip(template_config_file: Value, ip: &String) {
     }
 
     let out_path = format!(
-        "{}/configs/config.json.{}",
+        "{}/configs/config_{}.json",
         &path.to_str().unwrap(),
         ip.trim()
     );

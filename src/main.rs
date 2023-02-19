@@ -2,14 +2,12 @@ use colour::{blue, blue_ln, cyan_ln, green, green_ln, red, red_ln, yellow, yello
 use serde_json::Value;
 mod fs_and_config_fns;
 mod request_fns;
-mod vmess_config_model;
 use crate::fs_and_config_fns::{find_configs, read_temp_config, run_v2ray, write_config_with_ip};
 mod ip_fns;
 use crate::ip_fns::check_ip;
 use crate::request_fns::check_connection_through_v2ray;
 use std::env;
 use std::process::{exit, Command};
-use std::thread::JoinHandle;
 /*
 1-organize files
 2-choose configs
@@ -52,7 +50,7 @@ fn each_thread_job(ip: &String, config_file: Value, is_curl_installed: bool) {
         //Note: in windows the response of check_ip command is not returning 200
         if check_ip_reuslt || cfg!(target_os = "windows") {
             write_config_with_ip(config_file.clone(), &ip);
-            let mut handler = run_v2ray(format!("config.json.{}", ip.trim()).as_str());
+            let mut handler = run_v2ray(format!("config_{}.json", ip.trim()).as_str());
             let check_connection_handler = check_connection_through_v2ray(is_curl_installed, &ip);
             if !cfg!(target_os = "windows") {
                 handler.kill().unwrap();
@@ -66,7 +64,7 @@ fn each_thread_job(ip: &String, config_file: Value, is_curl_installed: bool) {
         }
     } else {
         write_config_with_ip(config_file.clone(), &ip);
-        let mut handler = run_v2ray(format!("config.json.{}", ip.trim()).as_str());
+        let mut handler = run_v2ray(format!("config_{}.json", ip.trim()).as_str());
         let check_connection_handler = check_connection_through_v2ray(is_curl_installed, &ip);
         handler.kill().unwrap();
         if check_connection_handler.is_some() {
